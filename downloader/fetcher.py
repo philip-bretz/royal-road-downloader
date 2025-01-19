@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from random import randrange
 from requests_html import HTMLSession, HTML
 from typing import Optional
 
@@ -23,6 +23,10 @@ class FinalChapter(Exception):
 
 
 MAX_CHAPTER = 10_000
+
+
+def _rand_sleep() -> None:
+    time.sleep(randrange(20, 50) / 100)
 
 
 class ChapterFetcherBase(ABC):
@@ -79,7 +83,7 @@ class ChapterFetcher(ChapterFetcherBase):
             raise FetchFailed(f"Fetch for fiction {self._fiction} failed at extracting Chapter {current_chapter.chapter_num + 1}")
 
     def _fetch_chapter_from_url(self, chapter_num: int, chapter_url: str) -> Chapter:
-        time.sleep(0.2) # NOTE: randomize
+        _rand_sleep()
         chapter_response = self._session.get(chapter_url)
         return self._html_to_chapter(chapter_num, chapter_response.html)
 
