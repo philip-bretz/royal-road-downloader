@@ -53,9 +53,13 @@ class ChapterFetcherBase(ABC):
 
 
 class ChapterFetcher(ChapterFetcherBase):
-    def __init__(self, fiction: Fiction):
+    def __init__(self, fiction: Fiction, update_mode: bool = True):
         self._fiction = fiction
+        self._update_mode = update_mode
         self._session = HTMLSession()
+
+    def get_fiction(self) -> Fiction:
+        return self._fiction
 
     def fetch(self, up_to_chapter: Optional[int] = None) -> list[Chapter]:
         logger.info(f"Fetching fiction {self._fiction.title}")
@@ -69,6 +73,11 @@ class ChapterFetcher(ChapterFetcherBase):
             chapter_1_url = self._chapter_1_url(home_page_response.html)
         except:
             raise FetchFailed(f"Fetch for fiction {self._fiction} failed at extraction Chapter 1 url from home page")
+        if self._update_mode:
+            try:
+                self._fiction = self._update_fiction_details(home_page_response.html)
+            except:
+                raise FetchFailed(f"Fetch for fiction {self._fiction} failed at updating fiction details")
         try:
             return self._fetch_chapter_from_url(1, chapter_1_url)
         except:
@@ -111,3 +120,12 @@ class ChapterFetcher(ChapterFetcherBase):
         if len(chapter_1_links) != 1:
             raise FetchFailed(f"Unknown formatting for chapter 1 link(s)")
         return f"{ROYAL_ROAD_URL}/{chapter_1_links[0]}"
+
+    def _update_fiction_details(self, home_page_html: HTML) -> Fiction:
+        raise NotImplementedError
+        return Fiction(
+            title=self._fiction.title,
+            number=self._fiction.number,
+            author=...,
+            description=...,
+        )
