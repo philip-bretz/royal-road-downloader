@@ -104,6 +104,10 @@ class ChapterFetcher(ChapterFetcherBase):
         )
 
     def _chapter_1_url(self, home_page: HTML) -> str:
-        if self._fiction.chapter_1_url is None:
-            raise NotImplementedError("Chapter 1 url finding not yet implemented")
-        return f"{self._fiction.home_page_url()}/chapter/{self._fiction.chapter_1_url}"
+        chapter_rows = home_page.find(".chapter-row")
+        if len(chapter_rows) < 1:
+            raise FetchFailed(f"No chapters found on home page of fiction {self._fiction.title}")
+        chapter_1_links = list(chapter_rows[0].links)
+        if len(chapter_1_links) != 1:
+            raise FetchFailed(f"Unknown formatting for chapter 1 link(s)")
+        return f"{ROYAL_ROAD_URL}/{chapter_1_links[0]}"

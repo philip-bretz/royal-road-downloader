@@ -1,15 +1,19 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from downloader.constants import ROYAL_ROAD_FICTIONS_URL
+from downloader.constants import ROYAL_ROAD_URL
 
 @dataclass(frozen=True)
 class Fiction:
     title: str
     number: int
-    title_url: str
-    chapter_1_url: Optional[str] = None
+    author: str = ""
 
-    base_url = ROYAL_ROAD_FICTIONS_URL
+    def _fmt_title(self) -> str:
+        return self.title.lower().replace(" ", "-")
+
+    def relative_url(self) -> str:
+        return f"fiction/{self.number}/{self._fmt_title()}"
+
     def home_page_url(self) -> str:
-        return f"{self.base_url}/{self.number}/{self.title_url}"
+        return f"{ROYAL_ROAD_URL}/{self.relative_url()}"

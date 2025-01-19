@@ -3,10 +3,8 @@ from downloader.fetcher import ChapterFetcher
 from downloader.renderer import HTMLRenderer
 
 fiction = Fiction(
-    "Delve",
-    25225,
-    "delve",
-    "368012/001-woodland",
+    "Mother of Learning",
+    21220,
 )
 fetcher = ChapterFetcher(fiction)
 chapters = fetcher.fetch(up_to_chapter=2)
