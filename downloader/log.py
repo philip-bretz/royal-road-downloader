@@ -2,7 +2,7 @@ import logging
 from logging import getLogger
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     handlers=[
         logging.FileHandler("testing.log"),
         logging.StreamHandler(),
