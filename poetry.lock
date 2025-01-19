@@ -360,6 +360,20 @@ htmlsoup = ["BeautifulSoup4"]
 source = ["Cython (>=3.0.11)"]
 
 [[package]]
+name = "lxml-html-clean"
+version = "0.4.1"
+description = "HTML cleaner from lxml project"
+optional = false
+python-versions = "*"
+files = [
+    {file = "lxml_html_clean-0.4.1-py3-none-any.whl", hash = "sha256:b704f2757e61d793b1c08bf5ad69e4c0b68d6696f4c3c1429982caf90050bcaf"},
+    {file = "lxml_html_clean-0.4.1.tar.gz", hash = "sha256:40c838bbcf1fc72ba4ce811fbb3135913017b27820d7c16e8bc412ae1d8bc00b"},
+]
+
+[package.dependencies]
+lxml = "*"
+
+[[package]]
 name = "parse"
 version = "1.20.2"
 description = "parse() is the opposite of format()"
@@ -615,4 +629,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "2f827659a86f2ae7932acdb6cdcad4260caa544bfef14c15102be8f7db45ac7c"
+content-hash = "f1f84fa4221d187eaa3ab1e878e7caad4f92523e37018ec03c655664f2b4794a"
