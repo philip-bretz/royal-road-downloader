@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from random import randrange
 from requests_html import HTMLSession, HTML
 from typing import Optional
 
+import re
 import time
 
 from downloader.chapter import Chapter
@@ -52,6 +54,14 @@ class ChapterFetcherBase(ABC):
         return chapters
 
 
+@dataclass(frozen=True)
+class ParsedHomePageHeader:
+    title: str
+    author: str
+    chapter_1_link: str
+    author_link: str
+
+
 class ChapterFetcher(ChapterFetcherBase):
     def __init__(self, fiction: Fiction, update_mode: bool = True):
         self._fiction = fiction
@@ -74,10 +84,7 @@ class ChapterFetcher(ChapterFetcherBase):
         except:
             raise FetchFailed(f"Fetch for fiction {self._fiction} failed at extraction Chapter 1 url from home page")
         if self._update_mode:
-            try:
-                self._fiction = self._update_fiction_details(home_page_response.html)
-            except:
-                raise FetchFailed(f"Fetch for fiction {self._fiction} failed at updating fiction details")
+            self._fiction = self._update_fiction_details(home_page_response.html)
         try:
             return self._fetch_chapter_from_url(1, chapter_1_url)
         except:
@@ -97,6 +104,7 @@ class ChapterFetcher(ChapterFetcherBase):
         return self._html_to_chapter(chapter_num, chapter_response.html)
 
     def _html_to_chapter(self, chapter_num: int, chapter_html: HTML) -> Chapter:
+        # NOTE: improve parsing
         title = (chapter_html.find('h1.font-white')[0]).text
         body = chapter_html.find('.chapter-inner',first=True).html
         author_notes_raw = chapter_html.find('.portlet-body.author-note')
@@ -112,20 +120,57 @@ class ChapterFetcher(ChapterFetcherBase):
             next_chapter_url=next_chapter_url,
         )
 
-    def _chapter_1_url(self, home_page: HTML) -> str:
-        chapter_rows = home_page.find(".chapter-row")
-        if len(chapter_rows) < 1:
-            raise FetchFailed(f"No chapters found on home page of fiction {self._fiction.title}")
-        chapter_1_links = list(chapter_rows[0].links)
-        if len(chapter_1_links) != 1:
-            raise FetchFailed(f"Unknown formatting for chapter 1 link(s)")
-        return f"{ROYAL_ROAD_URL}/{chapter_1_links[0]}"
+    def _chapter_1_url(self, home_page_html: HTML) -> str:
+        parsed_header = self._parse_home_page_header(home_page_html)
+        return f"{ROYAL_ROAD_URL}/{parsed_header.chapter_1_link}"
+
+    def _parse_chapter_html(self, chapter_html: HTML):
+        raise NotImplementedError
+
+    def _parse_home_page_header(self, home_page_html: HTML) -> ParsedHomePageHeader:
+        # Fetch home page header div
+        header_div = home_page_html.find(".row.fic-header", first=True)
+        if header_div is None:
+            raise FetchFailed(f"Unknown formatting for header div of {self._fiction.title}")
+        # Parse header texts
+        header_txts = header_div.text.split("\n")
+        if len(header_txts) != 3:
+            raise FetchFailed(f"Unknown formatting for header div of {self._fiction.title}")
+        title = header_txts[0]
+        author_match = re.search("^by .*", header_txts[1])
+        if author_match is None:
+            raise FetchFailed(f"Unknown formatting for author text of {self._fiction.title}")
+        author = author_match.string[3:]
+        # Parse header links
+        header_links = list(header_div.links)
+        if len(header_links) != 2:
+            raise FetchFailed(f"Unknown formatting for header links of {self._fiction.title}")
+        def _is_author_link(link: str) -> bool:
+            return re.search("^/profile/.*", link) is not None
+        def _is_ch_1_link(link: str) -> bool:
+            return re.search("^/fiction/.*", link) is not None
+        if _is_author_link(header_links[0]) and _is_ch_1_link(header_links[1]):
+            author_link, ch_1_link = header_links
+        elif _is_ch_1_link(header_links[0]) and _is_author_link(header_links[1]):
+            ch_1_link, author_link = header_links
+        else:
+            raise FetchFailed(f"Unknown formatting for header links of {self._fiction.title}")
+        return ParsedHomePageHeader(
+            title=title,
+            author=author,
+            chapter_1_link=ch_1_link,
+            author_link=author_link,
+        )
 
     def _update_fiction_details(self, home_page_html: HTML) -> Fiction:
-        raise NotImplementedError
+        description_div = home_page_html.find(".hidden-content", first=True)
+        if description_div is None:
+            raise FetchFailed(f"Unknown formatting for description of {self._fiction.title}")
+        description = description_div.html
+        parsed_header = self._parse_home_page_header(home_page_html)
         return Fiction(
             title=self._fiction.title,
             number=self._fiction.number,
-            author=...,
-            description=...,
+            author=parsed_header.author,
+            description=description,
         )
