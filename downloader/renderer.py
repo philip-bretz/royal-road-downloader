@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Optional
 
 from downloader.chapter import Chapter
@@ -12,6 +13,11 @@ logger = getLogger(__name__)
 
 class RenderFailure(Exception):
     pass
+
+
+class RenderFormat(StrEnum):
+    HTML = "html"
+    EPUB = "epub"
 
 
 class RendererBase(ABC):
