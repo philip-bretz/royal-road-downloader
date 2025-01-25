@@ -4,12 +4,12 @@ from typing import Optional
 from downloader.fiction import FictionRequest, Fiction
 from downloader.fetcher import ChapterFetcher
 from downloader.renderer import HTMLRenderer, RenderFormat
-from downloader.mock_database import MockDatabase
+from downloader.simple_database import SimpleDatabase
 
 SAVE_DIR = Path(__file__).parent.parent.joinpath("downloads")
 
 
-def download(title: str, number: int, chapters: Optional[int], format: RenderFormat, db: MockDatabase) -> Fiction:
+def download(title: str, number: int, chapters: Optional[int], format: RenderFormat, db: SimpleDatabase) -> Fiction:
     fiction_request = FictionRequest(title=title, number=number)
     fetcher = ChapterFetcher(fiction_request)
     fiction_details = fetcher.fetch_details()

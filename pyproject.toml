@@ -12,6 +12,7 @@ lxml-html-clean = "^0.4.1"
 pydantic = "^2.10.5"
 fastapi = "^0.115.7"
 uvicorn = "^0.34.0"
+pandas = "^2.2.3"
 
 [build-system]
 requires = ["poetry-core"]

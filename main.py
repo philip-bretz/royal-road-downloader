@@ -1,15 +1,31 @@
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from pathlib import Path
+from typing import Optional
+
 from downloader.fiction import Fiction
 from downloader.download import download as download_core
 from downloader.renderer import RenderFormat
-from downloader.mock_database import MockDatabase
-from fastapi import FastAPI
-from typing import Optional
+from downloader.simple_database import SimpleDatabase
 
-db = MockDatabase({
+DB_FILENAME = Path(__file__).parent.joinpath("db_config/saved_fictions.csv")
+
+db = SimpleDatabase({
     "Delve": Fiction(title="Delve", number=25225),
     "Mother of Learning": Fiction(title="Mother of Learning", number=21220)
 })
-app = FastAPI(title="Royal Road Fiction Downloader")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if DB_FILENAME.exists():
+        loaded_db = SimpleDatabase.from_csv(DB_FILENAME)
+        db.overwrite(loaded_db.fictions_dict())
+    yield
+    db.to_csv(DB_FILENAME)
+
+
+app = FastAPI(title="Royal Road Fiction Downloader", lifespan=lifespan)
 
 
 @app.get("/fiction/{title}")
